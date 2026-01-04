@@ -15,6 +15,16 @@ class Tenant extends Model
     protected $fillable = [
         'name',
         'active_location_name',
+        'auto_reply_enabled',
+        'auto_reply_tone',
+        'auto_reply_stars',
+        'auto_reply_delay_minutes',
+    ];
+
+    protected $casts = [
+        'auto_reply_enabled' => 'boolean',
+        'auto_reply_stars' => 'array',
+        'auto_reply_delay_minutes' => 'integer',
     ];
 
     /**
@@ -85,6 +95,20 @@ class Tenant extends Model
     public function hasGoogleConnection(): bool
     {
         return $this->googleConnection()->exists();
+    }
+
+    /**
+     * Check if auto-reply should be sent for a given star rating.
+     */
+    public function shouldAutoReply(int $rating): bool
+    {
+        if (!$this->auto_reply_enabled) {
+            return false;
+        }
+
+        $allowedStars = $this->auto_reply_stars ?? [];
+        
+        return in_array($rating, $allowedStars);
     }
 
     /**

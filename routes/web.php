@@ -101,6 +101,12 @@ Route::middleware(['auth', 'tenant', 'subscribed'])->group(function () {
         Route::put('/{template}', [TemplatesController::class, 'update'])->name('update');
         Route::delete('/{template}', [TemplatesController::class, 'destroy'])->name('destroy');
     });
+
+    // Settings
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [App\Http\Controllers\SettingsController::class, 'index'])->name('index');
+        Route::put('/auto-reply', [App\Http\Controllers\SettingsController::class, 'updateAutoReply'])->name('auto-reply');
+    });
 });
 
 /*
