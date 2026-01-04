@@ -20,6 +20,11 @@ class SyncReviewsJob implements ShouldQueue
     public int $tries = 3;
     public int $backoff = 60;
 
+    /**
+     * Track new review IDs for auto-reply processing.
+     */
+    private array $newReviewIds = [];
+
     public function __construct(
         public int $tenantId,
         public ?string $locationName = null
@@ -63,6 +68,9 @@ class SyncReviewsJob implements ShouldQueue
                 'reviews_synced' => $totalSynced,
             ]);
 
+            // Process auto-replies for new reviews
+            $this->dispatchAutoReplies($tenant);
+
         } catch (\Exception $e) {
             Log::error('SyncReviewsJob: Failed', [
                 'tenant_id' => $this->tenantId,
@@ -96,7 +104,11 @@ class SyncReviewsJob implements ShouldQueue
             ? Carbon::parse($reply['updateTime'])
             : null;
 
-        Review::updateOrCreate(
+        // Check if this is a new review (doesn't exist in DB yet)
+        $existingReview = Review::where('review_name', $reviewName)->first();
+        $isNew = !$existingReview;
+
+        $review = Review::updateOrCreate(
             [
                 'review_name' => $reviewName,
             ],
@@ -114,5 +126,38 @@ class SyncReviewsJob implements ShouldQueue
                 'raw' => $data,
             ]
         );
+
+        // Track new unreplied reviews for auto-reply
+        if ($isNew && !$reply && $review->id) {
+            $this->newReviewIds[] = [
+                'id' => $review->id,
+                'rating' => $starRating,
+            ];
+        }
+    }
+
+    /**
+     * Dispatch auto-reply jobs for new reviews that match tenant settings.
+     */
+    private function dispatchAutoReplies(Tenant $tenant): void
+    {
+        if (!$tenant->auto_reply_enabled) {
+            return;
+        }
+
+        $delayMinutes = $tenant->auto_reply_delay_minutes ?? 5;
+
+        foreach ($this->newReviewIds as $reviewInfo) {
+            if ($tenant->shouldAutoReply($reviewInfo['rating'])) {
+                AutoReplyJob::dispatch($reviewInfo['id'])
+                    ->delay(now()->addMinutes($delayMinutes));
+
+                Log::info('SyncReviewsJob: Scheduled auto-reply', [
+                    'review_id' => $reviewInfo['id'],
+                    'rating' => $reviewInfo['rating'],
+                    'delay_minutes' => $delayMinutes,
+                ]);
+            }
+        }
     }
 }
