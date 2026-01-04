@@ -77,8 +77,8 @@ GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=xxxxx
 GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
 
-# OpenAI (for AI drafts)
-OPENAI_API_KEY=sk-xxxxx
+# Gemini API (for AI reply drafts)
+GEMINI_API_KEY=AIzaSy...
 
 # Webhook Secret (for Pub/Sub)
 WEBHOOK_SECRET=your-secret-token
