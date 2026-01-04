@@ -92,10 +92,18 @@ class SyncLocationsJob implements ShouldQueue
         $phones = $location['phoneNumbers'] ?? [];
         $categories = $location['categories'] ?? [];
 
+        // GBP Business Information API returns location name as: locations/{locationId}
+        // Reviews API (v4) expects: accounts/{accountId}/locations/{locationId}
+        $rawLocationName = $location['name'] ?? '';
+        $locationPath = str_starts_with($rawLocationName, 'locations/')
+            ? $rawLocationName
+            : ('locations/' . ltrim($rawLocationName, '/'));
+        $fullLocationName = rtrim($accountName, '/') . '/' . $locationPath;
+
         return [
             'tenant_id' => $this->tenantId,
             'account_name' => $accountName,
-            'location_name' => $location['name'], // locations/{locationId}
+            'location_name' => $fullLocationName,
             'title' => $location['title'] ?? 'Unknown',
             'primary_category' => $categories['primaryCategory']['displayName'] ?? null,
             'phone' => $phones['primaryPhone'] ?? null,

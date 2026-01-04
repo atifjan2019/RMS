@@ -42,10 +42,14 @@ class LocationsController extends Controller
 
         $tenant->update(['active_location_name' => $location->location_name]);
 
-        // Sync reviews for the newly active location
-        SyncReviewsJob::dispatch($tenant->id, $location->location_name)->onQueue('reviews');
+        // Queue review sync in the background (only works if QUEUE_CONNECTION != sync)
+        // For sync driver, skip auto-sync to avoid blocking the request
+        if (config('queue.default') !== 'sync') {
+            SyncReviewsJob::dispatch($tenant->id, $location->location_name)->onQueue('reviews');
+            return back()->with('success', "Now managing: {$location->title}. Reviews syncing in background.");
+        }
 
-        return back()->with('success', "Now managing: {$location->title}");
+        return back()->with('success', "Now managing: {$location->title}. Use 'Sync Reviews' to fetch reviews.");
     }
 
     /**

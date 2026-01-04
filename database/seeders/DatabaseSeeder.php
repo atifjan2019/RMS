@@ -8,6 +8,8 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Use factories to seed data
+        $this->call([
+            DevUserSeeder::class,
+        ]);
     }
 }

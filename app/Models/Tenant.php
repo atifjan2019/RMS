@@ -86,4 +86,16 @@ class Tenant extends Model
     {
         return $this->googleConnection()->exists();
     }
+
+    /**
+     * Cashier subscriptions relation for Tenant billing.
+     *
+     * Cashier's default relation uses $this->getForeignKey() (tenant_id), but
+     * our subscriptions table uses billable_id / billable_type.
+     */
+    public function subscriptions()
+    {
+        return $this->morphMany(\Laravel\Cashier\Cashier::$subscriptionModel, 'billable')
+            ->orderBy('created_at', 'desc');
+    }
 }

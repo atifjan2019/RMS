@@ -1,28 +1,16 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('subscription_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('subscription_id')->constrained()->cascadeOnDelete();
-            $table->string('stripe_id')->unique();
-            $table->string('stripe_product');
-            $table->string('stripe_price');
-            $table->integer('quantity')->nullable();
-            $table->timestamps();
-
-            $table->index('subscription_id');
-        });
+        // no-op (replaced by 2024_01_01_000020_create_cashier_subscriptions_for_tenants)
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('subscription_items');
+        // no-op
     }
 };

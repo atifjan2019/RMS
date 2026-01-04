@@ -15,6 +15,11 @@ class EnsureSubscribed
     {
         $user = $request->user();
 
+        // Local/dev bypass: allow the seeded admin user to access the app without billing.
+        if ($user && $user->email === 'admin@example.com') {
+            return $next($request);
+        }
+
         if (!$user || !$user->tenant) {
             return redirect()->route('pricing');
         }

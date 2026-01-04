@@ -14,6 +14,7 @@ class GoogleBusinessProfileClient
     private GoogleTokenService $tokenService;
     private string $baseUrl = 'https://mybusinessbusinessinformation.googleapis.com/v1';
     private string $accountsUrl = 'https://mybusinessaccountmanagement.googleapis.com/v1';
+    // v4 root; resource names already include `accounts/...`.
     private string $reviewsBaseUrl = 'https://mybusiness.googleapis.com/v4';
     private int $maxRetries = 3;
     private int $retryDelay = 1000; // milliseconds
@@ -98,6 +99,29 @@ class GoogleBusinessProfileClient
     }
 
     /**
+     * Normalize a location resource name.
+     *
+     * Accepts either:
+     * - accounts/{accountId}/locations/{locationId}
+     * - locations/{locationId}
+     */
+    private function normalizeLocationName(string $locationName): string
+    {
+        $locationName = ltrim($locationName, '/');
+
+        if (str_starts_with($locationName, 'accounts/')) {
+            return $locationName;
+        }
+
+        if (str_starts_with($locationName, 'locations/')) {
+            // v4 Reviews API requires the full accounts/{accountId}/locations/{locationId} name.
+            throw new Exception('Invalid location name. Expected accounts/{accountId}/locations/{locationId}.');
+        }
+
+        throw new Exception('Invalid location name format.');
+    }
+
+    /**
      * List reviews for a location.
      *
      * @param string $locationName Format: accounts/{accountId}/locations/{locationId}
@@ -109,6 +133,8 @@ class GoogleBusinessProfileClient
             if ($pageToken) {
                 $params['pageToken'] = $pageToken;
             }
+
+            $locationName = $this->normalizeLocationName($locationName);
 
             $response = $this->client($tenant)
                 ->get("{$this->reviewsBaseUrl}/{$locationName}/reviews", $params);
@@ -142,6 +168,8 @@ class GoogleBusinessProfileClient
     public function upsertReply(Tenant $tenant, string $reviewName, string $replyText): ?array
     {
         try {
+            $reviewName = ltrim($reviewName, '/');
+
             $response = $this->client($tenant)
                 ->put("{$this->reviewsBaseUrl}/{$reviewName}/reply", [
                     'comment' => $replyText,
@@ -171,6 +199,8 @@ class GoogleBusinessProfileClient
     public function deleteReply(Tenant $tenant, string $reviewName): bool
     {
         try {
+            $reviewName = ltrim($reviewName, '/');
+
             $response = $this->client($tenant)
                 ->delete("{$this->reviewsBaseUrl}/{$reviewName}/reply");
 
