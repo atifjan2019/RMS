@@ -77,7 +77,7 @@
     <!-- Reviews List -->
     <div class="space-y-4">
         @forelse($reviews as $review)
-            <x-card class="hover:border-slate-600 transition-colors" x-data="{ expanded: false, replyText: '', loading: false, drafts: @js($review->ai_drafts ?? []) }">
+            <x-card class="hover:border-slate-600 transition-colors" x-data="reviewItem{{ $review->id }}()">
                 <div class="flex gap-4">
                     <!-- Avatar -->
                     <div class="flex-shrink-0">
@@ -112,6 +112,32 @@
                                 <p class="text-slate-300">{{ $review->reply_text }}</p>
                             </div>
                         @endif
+
+                        <!-- Quick AI Action Buttons (always visible) -->
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                            <span class="text-slate-500 text-xs">AI Reply:</span>
+                            <button
+                                @click="expanded = true; generateDraft('friendly')"
+                                :disabled="loading"
+                                class="text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors disabled:opacity-50"
+                            >
+                                😊 Friendly
+                            </button>
+                            <button
+                                @click="expanded = true; generateDraft('professional')"
+                                :disabled="loading"
+                                class="text-xs px-2 py-1 rounded-full bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors disabled:opacity-50"
+                            >
+                                💼 Professional
+                            </button>
+                            <button
+                                @click="expanded = true; generateDraft('recovery')"
+                                :disabled="loading"
+                                class="text-xs px-2 py-1 rounded-full bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors disabled:opacity-50"
+                            >
+                                🔧 Recovery
+                            </button>
+                        </div>
 
                         <!-- Reply Panel -->
                         <div class="border-t border-slate-700 pt-4 mt-4" x-show="expanded" x-collapse>
@@ -211,6 +237,10 @@
                 <script>
                     function reviewItem{{ $review->id }}() {
                         return {
+                            expanded: false,
+                            replyText: '',
+                            loading: false,
+                            drafts: @js($review->ai_drafts ?? []),
                             reviewId: {{ $review->id }},
                             async generateDraft(tone) {
                                 this.loading = true;
