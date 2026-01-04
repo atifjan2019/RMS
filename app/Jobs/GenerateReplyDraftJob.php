@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Review;
 use App\Models\GbpLocation;
-use App\Services\GeminiService;
+use App\Services\OpenAIService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -25,7 +25,7 @@ class GenerateReplyDraftJob implements ShouldQueue
         public ?string $tone = null // null means generate all tones
     ) {}
 
-    public function handle(GeminiService $gemini): void
+    public function handle(OpenAIService $openai): void
     {
         $review = Review::with('location')->find($this->reviewId);
 
@@ -40,7 +40,7 @@ class GenerateReplyDraftJob implements ShouldQueue
         try {
             if ($this->tone) {
                 // Generate single tone
-                $draft = $gemini->generateReplyDrafts(
+                $draft = $openai->generateReplyDrafts(
                     $review->reviewer_name,
                     $review->rating,
                     $review->comment,
@@ -54,7 +54,7 @@ class GenerateReplyDraftJob implements ShouldQueue
                 $review->update(['ai_drafts' => $drafts]);
             } else {
                 // Generate all tones
-                $drafts = $gemini->generateAllDrafts(
+                $drafts = $openai->generateAllDrafts(
                     $review->reviewer_name,
                     $review->rating,
                     $review->comment,

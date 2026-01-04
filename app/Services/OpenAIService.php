@@ -5,15 +5,15 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class GeminiService
+class OpenAIService
 {
     private string $apiKey;
-    private string $baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
-    private string $model = 'gemini-2.0-flash-lite';
+    private string $baseUrl = 'https://api.openai.com/v1';
+    private string $model = 'gpt-4o-mini';
 
     public function __construct()
     {
-        $this->apiKey = config('services.gemini.api_key');
+        $this->apiKey = config('services.openai.api_key');
     }
 
     /**
@@ -30,32 +30,24 @@ class GeminiService
 
         try {
             $response = Http::timeout(30)
-                ->post("{$this->baseUrl}/models/{$this->model}:generateContent?key={$this->apiKey}", [
-                    'contents' => [
+                ->withHeaders([
+                    'Authorization' => "Bearer {$this->apiKey}",
+                    'Content-Type' => 'application/json',
+                ])
+                ->post("{$this->baseUrl}/chat/completions", [
+                    'model' => $this->model,
+                    'messages' => [
                         [
-                            'parts' => [
-                                ['text' => $prompt]
-                            ]
+                            'role' => 'user',
+                            'content' => $prompt,
                         ]
                     ],
-                    'generationConfig' => [
-                        'temperature' => 0.7,
-                        'maxOutputTokens' => 500,
-                    ],
-                    'safetySettings' => [
-                        [
-                            'category' => 'HARM_CATEGORY_HARASSMENT',
-                            'threshold' => 'BLOCK_MEDIUM_AND_ABOVE'
-                        ],
-                        [
-                            'category' => 'HARM_CATEGORY_HATE_SPEECH',
-                            'threshold' => 'BLOCK_MEDIUM_AND_ABOVE'
-                        ],
-                    ],
+                    'temperature' => 0.7,
+                    'max_tokens' => 500,
                 ]);
 
             if (!$response->successful()) {
-                Log::error('Gemini API error', [
+                Log::error('OpenAI API error', [
                     'status' => $response->status(),
                     'body' => $response->json(),
                 ]);
@@ -63,11 +55,11 @@ class GeminiService
             }
 
             $data = $response->json();
-            $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+            $text = $data['choices'][0]['message']['content'] ?? null;
 
             return $text;
         } catch (\Exception $e) {
-            Log::error('Gemini API exception', [
+            Log::error('OpenAI API exception', [
                 'error' => $e->getMessage(),
             ]);
             return null;

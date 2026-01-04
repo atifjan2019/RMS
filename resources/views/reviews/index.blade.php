@@ -184,16 +184,17 @@
                             </div>
 
                             <!-- Draft Pills -->
-                            <div x-show="Object.keys(drafts).length > 0" class="mb-4">
+                            <div x-show="Object.keys(drafts).filter(k => drafts[k]).length > 0" class="mb-4">
                                 <p class="text-slate-400 text-sm mb-2">Click to use draft:</p>
-                                <div class="flex flex-wrap gap-2">
+                                <div class="flex flex-col gap-2">
                                     <template x-for="(draft, tone) in drafts" :key="tone">
                                         <button
+                                            x-show="draft"
                                             @click="replyText = draft"
-                                            class="text-xs px-3 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors text-left max-w-xs truncate"
+                                            class="text-sm px-4 py-3 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors text-left"
                                         >
-                                            <span class="font-medium capitalize" x-text="tone + ':'"></span>
-                                            <span x-text="draft.substring(0, 50) + '...'"></span>
+                                            <span class="font-medium capitalize text-amber-400" x-text="tone + ':'"></span>
+                                            <span class="block mt-1" x-text="draft"></span>
                                         </button>
                                     </template>
                                 </div>
