@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /dashboard
+Disallow: /billing
+Disallow: /google
+Disallow: /locations
+Disallow: /reviews
+Disallow: /templates
+Allow: /
+Allow: /pricing
+
+Sitemap: https://yourdomain.com/sitemap.xml
