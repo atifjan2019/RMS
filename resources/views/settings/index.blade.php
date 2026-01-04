@@ -4,26 +4,38 @@
 @section('page_title', 'Settings')
 
 @section('content')
-<div class="space-y-6">
-    <!-- Auto-Reply Settings -->
-    <x-card>
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h2 class="text-xl font-semibold text-white">Auto-Reply Settings</h2>
-                <p class="text-slate-400 text-sm mt-1">Automatically reply to reviews using AI</p>
-            </div>
+<div class="max-w-4xl mx-auto space-y-8">
+    <!-- Auto-Reply Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Auto-Reply Configuration</h2>
+            <p class="text-slate-400 mt-1">Configure how AI automatically responds to your customer reviews</p>
         </div>
+        
+    </div>
 
-        <form action="{{ route('settings.auto-reply') }}" method="POST" class="space-y-6">
-            @csrf
-            @method('PUT')
+    <!-- Main Settings Card -->
+    <form action="{{ route('settings.auto-reply') }}" method="POST" class="space-y-6">
+        @csrf
+        @method('PUT')
 
-            <!-- Enable/Disable Toggle -->
-            <div class="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl">
-                <div>
-                    <h3 class="font-medium text-white">Enable Auto-Reply</h3>
-                    <p class="text-slate-400 text-sm">When enabled, AI will automatically generate and post replies</p>
+        <!-- Master Switch -->
+        <div class="relative overflow-hidden rounded-2xl border border-slate-700 bg-slate-800/50 backdrop-blur-xl p-8 transition-all duration-300 hover:border-amber-500/30">
+            <div class="absolute top-0 right-0 -mt-16 -mr-16 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl"></div>
+            
+            <div class="relative flex items-center justify-between">
+                <div class="space-y-1">
+                    <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <span>Auto-Reply System</span>
+                        @if($tenant->auto_reply_enabled)
+                            <span class="px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 text-xs font-medium border border-green-500/20">Active</span>
+                        @else
+                            <span class="px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-400 text-xs font-medium border border-slate-500/20">Inactive</span>
+                        @endif
+                    </h3>
+                    <p class="text-slate-400 max-w-xl">When enabled, our AI will automatically generate and publish responses to new reviews based on your configuration below.</p>
                 </div>
+                
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input 
                         type="checkbox" 
@@ -32,44 +44,52 @@
                         {{ $tenant->auto_reply_enabled ? 'checked' : '' }}
                         class="sr-only peer"
                     >
-                    <div class="w-14 h-7 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-slate-400 after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500 peer-checked:after:bg-white"></div>
+                    <div class="w-14 h-7 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500"></div>
                 </label>
             </div>
+        </div>
 
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Tone Selection -->
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-3">Reply Tone</label>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="rounded-2xl border border-slate-700 bg-slate-800/50 backdrop-blur-sm p-6 space-y-4">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                    </svg>
+                    Voice & Tone
+                </h3>
+                <p class="text-sm text-slate-400">Choose the personality the AI should use when responding.</p>
+                
+                <div class="grid grid-cols-1 gap-3">
                     @foreach($tones as $tone)
-                        <label class="relative cursor-pointer">
+                        <label class="relative group cursor-pointer block">
                             <input 
                                 type="radio" 
                                 name="auto_reply_tone" 
                                 value="{{ $tone }}"
                                 {{ $tenant->auto_reply_tone === $tone ? 'checked' : '' }}
-                                class="sr-only peer"
+                                class="peer sr-only"
                             >
-                            <div class="p-4 bg-slate-800 border-2 border-slate-700 rounded-xl peer-checked:border-amber-500 peer-checked:bg-amber-500/10 transition-all">
-                                <div class="flex items-center gap-3">
-                                    @if($tone === 'friendly')
-                                        <span class="text-2xl">😊</span>
-                                    @elseif($tone === 'professional')
-                                        <span class="text-2xl">💼</span>
-                                    @else
-                                        <span class="text-2xl">🔧</span>
-                                    @endif
+                            <div class="flex items-center justify-between p-4 rounded-xl border-2 border-slate-700 bg-slate-900/50 hover:bg-slate-800 transition-all duration-200 peer-checked:border-white peer-checked:bg-amber-500/10 peer-checked:shadow-lg peer-checked:shadow-amber-500/10 peer-focus:ring-2 peer-focus:ring-amber-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-900">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-800 border border-slate-700 peer-checked:border-white text-xl group-hover:scale-110 transition-transform">
+                                        @if($tone === 'friendly') 😊
+                                        @elseif($tone === 'professional') 💼
+                                        @else 🔧
+                                        @endif
+                                    </div>
                                     <div>
                                         <p class="font-medium text-white capitalize">{{ $tone }}</p>
-                                        <p class="text-xs text-slate-400">
-                                            @if($tone === 'friendly')
-                                                Warm and personable
-                                            @elseif($tone === 'professional')
-                                                Polished and courteous
-                                            @else
-                                                Empathetic for negative reviews
+                                        <p class="text-xs text-slate-500 mt-0.5">
+                                            @if($tone === 'friendly') Warm, approachable, and personable
+                                            @elseif($tone === 'professional') Formal, polite, and business-focused
+                                            @else Solution-oriented and empathetic
                                             @endif
                                         </p>
                                     </div>
+                                </div>
+                                <div class="w-5 h-5 rounded-full border-2 border-slate-600 flex items-center justify-center peer-checked:border-white peer-checked:bg-white transition-all">
+                                    <div class="w-2 h-2 rounded-full bg-slate-900 opacity-0 peer-checked:opacity-100 transition-opacity"></div>
                                 </div>
                             </div>
                         </label>
@@ -77,78 +97,111 @@
                 </div>
             </div>
 
-            <!-- Star Rating Selection -->
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-3">Auto-reply to these ratings</label>
-                <p class="text-slate-500 text-xs mb-4">Select which star ratings should receive automatic replies</p>
-                <div class="flex flex-wrap gap-3">
-                    @for($i = 5; $i >= 1; $i--)
-                        <label class="relative cursor-pointer">
-                            <input 
-                                type="checkbox" 
-                                name="auto_reply_stars[]" 
-                                value="{{ $i }}"
-                                {{ in_array($i, $tenant->auto_reply_stars ?? []) ? 'checked' : '' }}
-                                class="sr-only peer"
-                            >
-                            <div class="flex items-center gap-2 px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-xl peer-checked:border-amber-500 peer-checked:bg-amber-500/10 transition-all">
-                                <span class="font-medium text-white">{{ $i }}</span>
-                                <div class="flex">
-                                    @for($s = 1; $s <= $i; $s++)
-                                        <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            <!-- Rules & Triggers -->
+            <div class="space-y-6">
+                <!-- Star Rating -->
+                <div class="rounded-2xl border border-slate-700 bg-slate-800/50 backdrop-blur-sm p-6 space-y-4">
+                    <h3 class="font-semibold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                        </svg>
+                        Target Ratings
+                    </h3>
+                    <p class="text-sm text-slate-400">Auto-reply only to reviews with these ratings.</p>
+                    
+                    <div class="flex flex-col rounded-xl overflow-hidden border border-slate-700">
+                        @for($i = 5; $i >= 1; $i--)
+                            <label class="relative cursor-pointer group block font-normal">
+                                <input 
+                                    type="checkbox" 
+                                    name="auto_reply_stars[]" 
+                                    value="{{ $i }}"
+                                    {{ in_array($i, $tenant->auto_reply_stars ?? []) ? 'checked' : '' }}
+                                    class="peer sr-only"
+                                >
+                                <div class="flex items-center justify-between px-4 py-3 bg-slate-900/50 {{ $i > 1 ? 'border-b border-slate-700' : '' }} hover:bg-slate-800 transition-all peer-checked:bg-amber-500/10">
+                                    <div class="flex items-center gap-3">
+                                        <span class="font-mono text-slate-400 w-4">{{ $i }}</span>
+                                        <div class="flex gap-0.5">
+                                            @for($s = 1; $s <= 5; $s++)
+                                                <svg class="w-4 h-4 {{ $s <= $i ? 'text-amber-400' : 'text-slate-700' }}" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                                </svg>
+                                            @endfor
+                                        </div>
+                                    </div>
+
+                                    <!-- Custom Checkbox Indicator -->
+                                    <div class="w-5 h-5 rounded border-2 border-slate-600 flex items-center justify-center peer-checked:border-white peer-checked:bg-amber-500 transition-all">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
                                         </svg>
-                                    @endfor
+                                    </div>
                                 </div>
-                            </div>
-                        </label>
-                    @endfor
+                            </label>
+                        @endfor
+                    </div>
                 </div>
-            </div>
 
-            <!-- Delay Setting -->
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-2">Reply Delay (minutes)</label>
-                <p class="text-slate-500 text-xs mb-3">Wait this long before sending auto-reply (gives you time to review first)</p>
-                <div class="flex items-center gap-4">
-                    <input 
-                        type="number" 
-                        name="auto_reply_delay_minutes" 
-                        value="{{ $tenant->auto_reply_delay_minutes ?? 5 }}"
-                        min="1"
-                        max="1440"
-                        class="w-32 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
-                    >
-                    <span class="text-slate-400 text-sm">minutes</span>
-                </div>
-            </div>
 
-            <!-- Warning -->
-            <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
-                    <div>
-                        <p class="text-amber-400 font-medium">Important</p>
-                        <p class="text-slate-400 text-sm mt-1">
-                            Auto-replies are posted directly to Google. We recommend starting with only 5-star reviews 
-                            and reviewing the AI responses before enabling for lower ratings.
+                <!-- Timing -->
+                <div class="rounded-2xl border border-slate-700 bg-slate-800/50 backdrop-blur-sm p-6 space-y-4">
+                    <h3 class="font-semibold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Response Delay
+                    </h3>
+                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-sm font-medium text-slate-300">Wait time before posting (minutes)</label>
+                        </div>
+                        <input 
+                            type="number" 
+                            name="auto_reply_delay_minutes" 
+                            value="{{ $tenant->auto_reply_delay_minutes ?? 5 }}"
+                            min="1"
+                            max="1440"
+                            class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                            placeholder="Enter minutes (e.g. 30)"
+                        >
+                        <p class="text-xs text-slate-500 mt-2 flex items-center gap-2">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Allows window for manual review intervention
                         </p>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Submit -->
-            <div class="flex justify-end">
-                <button type="submit" class="btn-primary">
+        <!-- Warning/Info -->
+        <div class="rounded-xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/20 p-4">
+            <div class="flex gap-3">
+                <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div class="text-sm">
+                    <p class="font-medium text-blue-400 mb-1">Safety First</p>
+                    <p class="text-blue-300/80">
+                        We recommend starting with 5-star reviews only and a delay of at least 30 minutes. This gives you time to manually intervene if a customer leaves a complex review that needs human attention.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sticky Footer -->
+        <div class="sticky bottom-4 z-40">
+            <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-xl rounded-xl -m-4"></div>
+            <div class="relative flex items-center justify-end gap-4 p-4 border border-slate-700 bg-slate-800/80 rounded-xl shadow-2xl">
+                <span class="text-slate-400 text-sm hidden sm:block">Changes are not saved automatically</span>
+                <button type="submit" class="btn-primary min-w-[160px] shadow-lg shadow-amber-500/20">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    Save Settings
+                    Save Changes
                 </button>
             </div>
-        </form>
-    </x-card>
+        </div>
+    </form>
 </div>
 @endsection
