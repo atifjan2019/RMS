@@ -30,7 +30,8 @@ class SettingsController extends Controller
 
         $validated = $request->validate([
             'auto_reply_enabled' => 'boolean',
-            'auto_reply_tone' => 'required|in:friendly,professional,recovery',
+            'auto_reply_tone' => 'nullable|array',
+            'auto_reply_tone.*' => 'string|in:friendly,professional,recovery',
             'auto_reply_stars' => 'nullable|array',
             'auto_reply_stars.*' => 'integer|min:1|max:5',
             'auto_reply_delay_minutes' => 'required|integer|min:1|max:1440',
@@ -38,7 +39,7 @@ class SettingsController extends Controller
 
         $tenant->update([
             'auto_reply_enabled' => $request->boolean('auto_reply_enabled'),
-            'auto_reply_tone' => $validated['auto_reply_tone'],
+            'auto_reply_tone' => $validated['auto_reply_tone'] ?? [],
             'auto_reply_stars' => $validated['auto_reply_stars'] ?? [],
             'auto_reply_delay_minutes' => $validated['auto_reply_delay_minutes'],
         ]);

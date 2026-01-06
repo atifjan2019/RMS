@@ -135,4 +135,83 @@ STRICT SAFETY RULES (MUST FOLLOW):
 Generate ONLY the reply text, nothing else. No quotes, no explanation, just the reply:
 PROMPT;
     }
+
+    /**
+     * Generate business insights summary from all reviews.
+     */
+    public function generateBusinessSummary(array $reviews, string $businessName, array $stats): ?string
+    {
+        if (empty($reviews)) {
+            return null;
+        }
+
+        // Prepare review samples (limit to recent 50 for context length)
+        $reviewSamples = array_slice($reviews, 0, 50);
+        $reviewTexts = [];
+        
+        foreach ($reviewSamples as $review) {
+            $comment = $review['comment'] ?? 'No comment';
+            $reviewTexts[] = "Rating: {$review['rating']}/5 - {$comment}";
+        }
+
+        $reviewsText = implode("\n", $reviewTexts);
+        $totalReviews = $stats['totalReviews'];
+        $avgRating = $stats['avgRating'];
+        $ratingDist = json_encode($stats['ratingDistribution']);
+
+        $prompt = <<<PROMPT
+You are an AI business analyst. Analyze the following customer reviews for "{$businessName}" and create a comprehensive, insightful summary.
+
+BUSINESS METRICS:
+- Total Reviews: {$totalReviews}
+- Average Rating: {$avgRating}/5
+- Rating Distribution: {$ratingDist}
+
+RECENT REVIEW SAMPLES:
+{$reviewsText}
+
+Generate a professional business summary with the following sections:
+1. **Overall Sentiment** (1-2 sentences about general customer satisfaction)
+2. **Key Strengths** (2-3 bullet points highlighting what customers love most)
+3. **Areas for Improvement** (1-2 bullet points on recurring concerns or suggestions)
+4. **Recommendation** (1 actionable recommendation to improve ratings)
+
+Keep it concise, data-driven, and actionable. Use markdown formatting. Be specific and reference patterns you see in the reviews.
+PROMPT;
+
+        try {
+            $response = Http::timeout(45)
+                ->withHeaders([
+                    'Authorization' => "Bearer {$this->apiKey}",
+                    'Content-Type' => 'application/json',
+                ])
+                ->post("{$this->baseUrl}/chat/completions", [
+                    'model' => $this->model,
+                    'messages' => [
+                        [
+                            'role' => 'user',
+                            'content' => $prompt,
+                        ]
+                    ],
+                    'temperature' => 0.5,
+                    'max_tokens' => 800,
+                ]);
+
+            if (!$response->successful()) {
+                Log::error('OpenAI API error for business summary', [
+                    'status' => $response->status(),
+                    'body' => $response->json(),
+                ]);
+                return null;
+            }
+
+            $data = $response->json();
+            return $data['choices'][0]['message']['content'] ?? null;
+        } catch (\Exception $e) {
+            Log::error('OpenAI API exception for business summary', [
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
 }

@@ -69,6 +69,7 @@ Route::middleware(['auth', 'tenant'])->prefix('billing')->name('billing.')->grou
 Route::middleware(['auth', 'tenant', 'subscribed'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/dashboard/refresh-summary', [DashboardController::class, 'refreshSummary'])->name('dashboard.refresh-summary');
 
     // Google Connection
     Route::prefix('google')->name('google.')->group(function () {

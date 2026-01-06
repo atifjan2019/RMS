@@ -23,6 +23,7 @@ class Tenant extends Model
 
     protected $casts = [
         'auto_reply_enabled' => 'boolean',
+        'auto_reply_tone' => 'array',
         'auto_reply_stars' => 'array',
         'auto_reply_delay_minutes' => 'integer',
     ];

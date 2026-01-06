@@ -62,17 +62,20 @@
                 
                 <div class="grid grid-cols-1 gap-3">
                     @foreach($tones as $tone)
-                        <label class="relative group cursor-pointer block">
+                        <label class="relative group cursor-pointer block" x-data="{ checked: {{ in_array($tone, $tenant->auto_reply_tone ?? []) ? 'true' : 'false' }} }">
                             <input 
-                                type="radio" 
-                                name="auto_reply_tone" 
+                                type="checkbox" 
+                                name="auto_reply_tone[]" 
                                 value="{{ $tone }}"
-                                {{ $tenant->auto_reply_tone === $tone ? 'checked' : '' }}
+                                {{ in_array($tone, $tenant->auto_reply_tone ?? []) ? 'checked' : '' }}
                                 class="peer sr-only"
+                                @change="checked = $el.checked"
                             >
-                            <div class="flex items-center justify-between p-4 rounded-xl border-2 border-slate-700 bg-slate-900/50 hover:bg-slate-800 transition-all duration-200 peer-checked:border-white peer-checked:bg-amber-500/10 peer-checked:shadow-lg peer-checked:shadow-amber-500/10 peer-focus:ring-2 peer-focus:ring-amber-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-900">
+                            <div class="flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 peer-focus:ring-2 peer-focus:ring-amber-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-900"
+                                :class="checked ? 'border-amber-500 bg-amber-500/10 shadow-lg shadow-amber-500/10' : 'border-slate-700 bg-slate-900/50 hover:bg-slate-800'">
                                 <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-800 border border-slate-700 peer-checked:border-white text-xl group-hover:scale-110 transition-transform">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-800 border transition-transform text-xl group-hover:scale-110"
+                                        :class="checked ? 'border-amber-500' : 'border-slate-700'">
                                         @if($tone === 'friendly') 😊
                                         @elseif($tone === 'professional') 💼
                                         @else 🔧
@@ -88,8 +91,14 @@
                                         </p>
                                     </div>
                                 </div>
-                                <div class="w-5 h-5 rounded-full border-2 border-slate-600 flex items-center justify-center peer-checked:border-white peer-checked:bg-white transition-all">
-                                    <div class="w-2 h-2 rounded-full bg-slate-900 opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                                <!-- Checkmark in Circle -->
+                                <div class="relative w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all"
+                                    :class="checked ? 'border-amber-500 bg-amber-500' : 'border-slate-600 bg-transparent'">
+                                    <svg class="w-3.5 h-3.5 text-white transition-transform" 
+                                        :class="checked ? 'scale-100' : 'scale-0'"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                    </svg>
                                 </div>
                             </div>
                         </label>
@@ -111,15 +120,17 @@
                     
                     <div class="flex flex-col rounded-xl overflow-hidden border border-slate-700">
                         @for($i = 5; $i >= 1; $i--)
-                            <label class="relative cursor-pointer group block font-normal">
+                            <label class="relative cursor-pointer group block font-normal" x-data="{ checked: {{ in_array($i, $tenant->auto_reply_stars ?? []) ? 'true' : 'false' }} }">
                                 <input 
                                     type="checkbox" 
                                     name="auto_reply_stars[]" 
                                     value="{{ $i }}"
                                     {{ in_array($i, $tenant->auto_reply_stars ?? []) ? 'checked' : '' }}
                                     class="peer sr-only"
+                                    @change="checked = $el.checked"
                                 >
-                                <div class="flex items-center justify-between px-4 py-3 bg-slate-900/50 {{ $i > 1 ? 'border-b border-slate-700' : '' }} hover:bg-slate-800 transition-all peer-checked:bg-amber-500/10">
+                                <div class="flex items-center justify-between px-4 py-3 {{ $i > 1 ? 'border-b border-slate-700' : '' }} transition-all"
+                                    :class="checked ? 'bg-amber-500/10' : 'bg-slate-900/50 hover:bg-slate-800'">
                                     <div class="flex items-center gap-3">
                                         <span class="font-mono text-slate-400 w-4">{{ $i }}</span>
                                         <div class="flex gap-0.5">
@@ -132,8 +143,11 @@
                                     </div>
 
                                     <!-- Custom Checkbox Indicator -->
-                                    <div class="w-5 h-5 rounded border-2 border-slate-600 flex items-center justify-center peer-checked:border-white peer-checked:bg-amber-500 transition-all">
-                                        <svg class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="w-5 h-5 rounded border-2 flex items-center justify-center transition-all"
+                                        :class="checked ? 'border-amber-500 bg-amber-500' : 'border-slate-600'">
+                                        <svg class="w-3.5 h-3.5 text-white transition-transform" 
+                                            :class="checked ? 'scale-100' : 'scale-0'"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
                                         </svg>
                                     </div>
