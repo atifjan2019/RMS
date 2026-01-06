@@ -86,6 +86,11 @@ class Tenant extends Model
      */
     public function hasActiveSubscription(): bool
     {
+        // Admin users bypass subscription check
+        if ($this->users()->where('is_admin', true)->exists()) {
+            return true;
+        }
+        
         return $this->subscribed('default');
     }
 
