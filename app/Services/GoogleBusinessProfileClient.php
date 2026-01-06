@@ -221,6 +221,73 @@ class GoogleBusinessProfileClient
     }
 
     /**
+     * Get detailed location information.
+     *
+     * @param string $locationName Format: accounts/{accountId}/locations/{locationId}
+     */
+    public function getLocation(Tenant $tenant, string $locationName): ?array
+    {
+        try {
+            $locationName = $this->normalizeLocationName($locationName);
+
+            $response = $this->client($tenant)
+                ->get("{$this->baseUrl}/{$locationName}", [
+                    'readMask' => 'name,title,phoneNumbers,categories,storefrontAddress,websiteUri,regularHours,specialHours,serviceArea,labels,adWordsLocationExtensions,latlng,openInfo,metadata,profile,relationshipData',
+                ]);
+
+            if (!$response->successful()) {
+                $this->handleError($response, 'getLocation');
+                return null;
+            }
+
+            return $response->json();
+        } catch (Exception $e) {
+            Log::error('getLocation failed', [
+                'tenant_id' => $tenant->id,
+                'location' => $locationName,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Update location information.
+     *
+     * @param string $locationName Format: accounts/{accountId}/locations/{locationId}
+     * @param array $data Location data to update
+     * @param string|null $updateMask Comma-separated field paths to update
+     */
+    public function updateLocation(Tenant $tenant, string $locationName, array $data, ?string $updateMask = null): ?array
+    {
+        try {
+            $locationName = $this->normalizeLocationName($locationName);
+
+            $params = [];
+            if ($updateMask) {
+                $params['updateMask'] = $updateMask;
+            }
+
+            $response = $this->client($tenant)
+                ->patch("{$this->baseUrl}/{$locationName}", $data, $params);
+
+            if (!$response->successful()) {
+                $this->handleError($response, 'updateLocation');
+                return null;
+            }
+
+            return $response->json();
+        } catch (Exception $e) {
+            Log::error('updateLocation failed', [
+                'tenant_id' => $tenant->id,
+                'location' => $locationName,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
      * Handle API errors.
      */
     private function handleError(Response $response, string $method): void

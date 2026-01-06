@@ -214,4 +214,72 @@ PROMPT;
             return null;
         }
     }
+
+    /**
+     * Generate AI recommendations for business profile improvements.
+     */
+    public function generateProfileRecommendations(array $locationData, $tenant): ?string
+    {
+        $title = $locationData['title'] ?? 'Unknown Business';
+        $description = $locationData['profile']['description'] ?? 'No description';
+        $categories = json_encode($locationData['categories'] ?? []);
+        $phone = $locationData['phoneNumbers']['primaryPhone'] ?? 'Not set';
+        $website = $locationData['websiteUri'] ?? 'Not set';
+        $address = json_encode($locationData['storefrontAddress'] ?? []);
+
+        $prompt = <<<PROMPT
+You are a Google Business Profile optimization expert. Analyze this business profile and provide specific, actionable recommendations to improve visibility, customer engagement, and local SEO.
+
+BUSINESS PROFILE DATA:
+- Business Name: {$title}
+- Description: {$description}
+- Categories: {$categories}
+- Phone: {$phone}
+- Website: {$website}
+- Address: {$address}
+
+Generate a professional analysis with:
+1. **Profile Completeness Score** (X/100 with brief explanation)
+2. **Critical Issues** (1-3 bullet points of urgent problems to fix)
+3. **Optimization Opportunities** (2-3 specific improvements with expected impact)
+4. **SEO Keywords** (3-5 recommended keywords/phrases to add to description)
+
+Be specific and actionable. Reference Google's best practices. Use markdown formatting.
+PROMPT;
+
+        try {
+            $response = Http::timeout(40)
+                ->withHeaders([
+                    'Authorization' => "Bearer {$this->apiKey}",
+                    'Content-Type' => 'application/json',
+                ])
+                ->post("{$this->baseUrl}/chat/completions", [
+                    'model' => $this->model,
+                    'messages' => [
+                        [
+                            'role' => 'user',
+                            'content' => $prompt,
+                        ]
+                    ],
+                    'temperature' => 0.6,
+                    'max_tokens' => 700,
+                ]);
+
+            if (!$response->successful()) {
+                Log::error('OpenAI API error for profile recommendations', [
+                    'status' => $response->status(),
+                    'body' => $response->json(),
+                ]);
+                return null;
+            }
+
+            $data = $response->json();
+            return $data['choices'][0]['message']['content'] ?? null;
+        } catch (\Exception $e) {
+            Log::error('OpenAI API exception for profile recommendations', [
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
 }
