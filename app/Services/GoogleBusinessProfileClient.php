@@ -232,7 +232,7 @@ class GoogleBusinessProfileClient
 
             $response = $this->client($tenant)
                 ->get("{$this->baseUrl}/{$locationName}", [
-                    'readMask' => 'name,title,phoneNumbers,categories,storefrontAddress,websiteUri,regularHours,specialHours,serviceArea,labels,adWordsLocationExtensions,latlng,openInfo,metadata,profile,relationshipData',
+                    'readMask' => 'name,title,phoneNumbers,categories,storefrontAddress,websiteUri,regularHours,specialHours,serviceArea,labels,adWordsLocationExtensions,latlng,openInfo,metadata,profile,relationshipData,moreHours,serviceItems,attributes',
                 ]);
 
             if (!$response->successful()) {

@@ -160,7 +160,7 @@ PROMPT;
         $ratingDist = json_encode($stats['ratingDistribution']);
 
         $prompt = <<<PROMPT
-You are an AI business analyst. Analyze the following customer reviews for "{$businessName}" and create a comprehensive, insightful summary.
+You are an AI business analyst. Analyze customer reviews for "{$businessName}" and create a brief, concise summary.
 
 BUSINESS METRICS:
 - Total Reviews: {$totalReviews}
@@ -170,13 +170,13 @@ BUSINESS METRICS:
 RECENT REVIEW SAMPLES:
 {$reviewsText}
 
-Generate a professional business summary with the following sections:
-1. **Overall Sentiment** (1-2 sentences about general customer satisfaction)
-2. **Key Strengths** (2-3 bullet points highlighting what customers love most)
-3. **Areas for Improvement** (1-2 bullet points on recurring concerns or suggestions)
-4. **Recommendation** (1 actionable recommendation to improve ratings)
+Generate a compact summary with these sections (keep it SHORT and to the point):
+1. **Overall Sentiment** (1 sentence only)
+2. **Top Strengths** (2-3 short bullet points, max 10 words each)
+3. **Areas to Improve** (1-2 short bullet points, max 10 words each)
+4. **Quick Win** (1 sentence with one actionable recommendation)
 
-Keep it concise, data-driven, and actionable. Use markdown formatting. Be specific and reference patterns you see in the reviews.
+Use markdown. Be extremely concise - total output should be under 150 words.
 PROMPT;
 
         try {
@@ -194,7 +194,7 @@ PROMPT;
                         ]
                     ],
                     'temperature' => 0.5,
-                    'max_tokens' => 800,
+                    'max_tokens' => 400,
                 ]);
 
             if (!$response->successful()) {
@@ -228,23 +228,22 @@ PROMPT;
         $address = json_encode($locationData['storefrontAddress'] ?? []);
 
         $prompt = <<<PROMPT
-You are a Google Business Profile optimization expert. Analyze this business profile and provide specific, actionable recommendations to improve visibility, customer engagement, and local SEO.
+You are a Google Business Profile optimization expert. Analyze this profile and provide brief, actionable recommendations.
 
-BUSINESS PROFILE DATA:
-- Business Name: {$title}
+BUSINESS PROFILE:
+- Name: {$title}
 - Description: {$description}
 - Categories: {$categories}
 - Phone: {$phone}
 - Website: {$website}
-- Address: {$address}
 
-Generate a professional analysis with:
-1. **Profile Completeness Score** (X/100 with brief explanation)
-2. **Critical Issues** (1-3 bullet points of urgent problems to fix)
-3. **Optimization Opportunities** (2-3 specific improvements with expected impact)
-4. **SEO Keywords** (3-5 recommended keywords/phrases to add to description)
+Generate a SHORT analysis with:
+1. **Score** (X/100 with 1 sentence why)
+2. **Critical Issues** (1-2 bullet points, max 10 words each)
+3. **Quick Wins** (2 bullet points, max 10 words each)
+4. **Keywords** (3-4 keywords to add)
 
-Be specific and actionable. Reference Google's best practices. Use markdown formatting.
+Be extremely concise. Total output under 120 words. Use markdown.
 PROMPT;
 
         try {
@@ -262,7 +261,7 @@ PROMPT;
                         ]
                     ],
                     'temperature' => 0.6,
-                    'max_tokens' => 700,
+                    'max_tokens' => 400,
                 ]);
 
             if (!$response->successful()) {

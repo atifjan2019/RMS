@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\BusinessProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GoogleConnectController;
 use App\Http\Controllers\LocationsController;
@@ -70,6 +71,13 @@ Route::middleware(['auth', 'tenant', 'subscribed'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/dashboard/refresh-summary', [DashboardController::class, 'refreshSummary'])->name('dashboard.refresh-summary');
+
+    // Business Profile
+    Route::prefix('business-profile')->name('business-profile.')->group(function () {
+        Route::get('/', [BusinessProfileController::class, 'index'])->name('index');
+        Route::put('/update', [BusinessProfileController::class, 'update'])->name('update');
+        Route::post('/refresh-recommendations', [BusinessProfileController::class, 'refreshRecommendations'])->name('refresh-recommendations');
+    });
 
     // Google Connection
     Route::prefix('google')->name('google.')->group(function () {

@@ -5,43 +5,6 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- AI Business Summary -->
-    @if($businessSummary && $stats['totalReviews'] > 0)
-    <div class="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent backdrop-blur-sm p-6 relative overflow-hidden">
-        <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl"></div>
-        
-        <div class="relative">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center">
-                        <svg class="w-6 h-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-white">AI Business Insights</h3>
-                        <p class="text-sm text-slate-400">Generated from {{ $stats['totalReviews'] }} customer reviews</p>
-                    </div>
-                </div>
-                
-                <form action="{{ route('dashboard.refresh-summary') }}" method="POST" class="inline">
-                    @csrf
-                    <button type="submit" class="px-3 py-1.5 text-sm rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-amber-500/50 transition-all flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        Refresh
-                    </button>
-                </form>
-            </div>
-            
-            <div class="prose prose-invert prose-sm max-w-none prose-headings:text-white prose-headings:font-semibold prose-p:text-slate-300 prose-strong:text-amber-400 prose-ul:text-slate-300 prose-li:text-slate-300">
-                {!! \Illuminate\Support\Str::markdown($businessSummary) !!}
-            </div>
-        </div>
-    </div>
-    @endif
-
     <!-- Quick Stats -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <x-card>
@@ -204,5 +167,74 @@
             </div>
         </x-card>
     </div>
+
+    <!-- AI Business Insights -->
+    @if($businessSummary && $stats['totalReviews'] > 0)
+    <div class="rounded-2xl border border-amber-500/20 bg-slate-800/50 backdrop-blur-sm p-6 relative overflow-hidden">        
+        <div class="relative">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🤖</span>
+                    <div>
+                        <h3 class="text-base font-semibold text-white">AI Business Insights</h3>
+                        <p class="text-xs text-slate-500">From {{ $stats['totalReviews'] }} reviews</p>
+                    </div>
+                </div>
+                
+                <form action="{{ route('dashboard.refresh-summary') }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="p-2 text-sm rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-400 hover:text-amber-400 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+            
+            <div class="space-y-4" x-data="{ summary: @js($businessSummary) }">
+                @php
+                    // Parse the markdown to extract sections with emojis
+                    $lines = explode("\n", $businessSummary);
+                    $sections = [];
+                    $currentSection = null;
+                    
+                    foreach ($lines as $line) {
+                        $line = trim($line);
+                        if (empty($line)) continue;
+                        
+                        // Detect headers
+                        if (strpos($line, '**Overall Sentiment**') !== false || strpos($line, '**Score**') !== false) {
+                            $currentSection = 'sentiment';
+                            $sections[$currentSection] = ['emoji' => '😊', 'title' => 'Overall', 'content' => ''];
+                        } elseif (strpos($line, '**Top Strengths**') !== false || strpos($line, '**Key Strengths**') !== false) {
+                            $currentSection = 'strengths';
+                            $sections[$currentSection] = ['emoji' => '✨', 'title' => 'Strengths', 'content' => ''];
+                        } elseif (strpos($line, '**Areas to Improve**') !== false || strpos($line, '**Critical Issues**') !== false) {
+                            $currentSection = 'improve';
+                            $sections[$currentSection] = ['emoji' => '🎯', 'title' => 'Improve', 'content' => ''];
+                        } elseif (strpos($line, '**Quick Win**') !== false || strpos($line, '**Recommendation**') !== false || strpos($line, '**Keywords**') !== false) {
+                            $currentSection = 'action';
+                            $sections[$currentSection] = ['emoji' => '💡', 'title' => 'Action', 'content' => ''];
+                        } elseif ($currentSection && !str_starts_with($line, '**')) {
+                            $sections[$currentSection]['content'] .= $line . ' ';
+                        }
+                    }
+                @endphp
+                
+                @foreach($sections as $section)
+                    <div class="flex gap-3 items-start p-3 rounded-lg bg-slate-900/50 hover:bg-slate-900/70 transition-colors">
+                        <div class="text-2xl flex-shrink-0">{{ $section['emoji'] }}</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">{{ $section['title'] }}</div>
+                            <div class="text-sm text-slate-300 leading-relaxed">
+                                {!! \Illuminate\Support\Str::markdown(trim($section['content'])) !!}
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 @endsection
