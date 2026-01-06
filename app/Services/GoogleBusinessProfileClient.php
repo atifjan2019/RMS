@@ -232,10 +232,16 @@ class GoogleBusinessProfileClient
 
             $response = $this->client($tenant)
                 ->get("{$this->baseUrl}/{$locationName}", [
-                    'readMask' => 'name,title,phoneNumbers,categories,storefrontAddress,websiteUri,regularHours,specialHours,serviceArea,labels,adWordsLocationExtensions,latlng,openInfo,metadata,profile,relationshipData,moreHours,serviceItems,attributes',
+                    'readMask' => 'name,title,phoneNumbers,categories,storefrontAddress,websiteUri,regularHours,specialHours,metadata,profile',
                 ]);
 
             if (!$response->successful()) {
+                Log::error('getLocation API error', [
+                    'tenant_id' => $tenant->id,
+                    'location' => $locationName,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
                 $this->handleError($response, 'getLocation');
                 return null;
             }
@@ -243,6 +249,53 @@ class GoogleBusinessProfileClient
             return $response->json();
         } catch (Exception $e) {
             Log::error('getLocation failed', [
+                'tenant_id' => $tenant->id,
+                'location' => $locationName,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Get comprehensive location information with all available fields.
+     *
+     * @param string $locationName Format: accounts/{accountId}/locations/{locationId}
+     */
+    public function getLocationComprehensive(Tenant $tenant, string $locationName): ?array
+    {
+        try {
+            $locationName = $this->normalizeLocationName($locationName);
+
+            // Fetch all available fields from Google Business Profile API
+            $response = $this->client($tenant)
+                ->get("{$this->baseUrl}/{$locationName}", [
+                    'readMask' => 'name,title,phoneNumbers,categories,storefrontAddress,websiteUri,regularHours,specialHours,serviceArea,labels,adWordsLocationExtensions,latlng,openInfo,metadata,profile,relationshipData,moreHours,serviceItems,foodMenus',
+                ]);
+
+            if (!$response->successful()) {
+                Log::error('getLocationComprehensive API error', [
+                    'tenant_id' => $tenant->id,
+                    'location' => $locationName,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+                
+                // Try with minimal fields if comprehensive fails
+                $response = $this->client($tenant)
+                    ->get("{$this->baseUrl}/{$locationName}", [
+                        'readMask' => 'name,title,phoneNumbers,categories,storefrontAddress,websiteUri,regularHours,profile',
+                    ]);
+                    
+                if (!$response->successful()) {
+                    $this->handleError($response, 'getLocationComprehensive');
+                    return null;
+                }
+            }
+
+            return $response->json();
+        } catch (Exception $e) {
+            Log::error('getLocationComprehensive failed', [
                 'tenant_id' => $tenant->id,
                 'location' => $locationName,
                 'error' => $e->getMessage(),

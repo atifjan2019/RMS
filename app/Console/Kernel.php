@@ -12,6 +12,9 @@ class Kernel extends ConsoleKernel
     {
         // Poll reviews hourly as a fallback for missed webhooks
         $schedule->job(new PollReviewsJob)->hourly();
+        
+        // Sync Google Business Profile data daily at 2 AM
+        $schedule->command('gbp:sync-data')->dailyAt('02:00');
     }
 
     protected function commands(): void

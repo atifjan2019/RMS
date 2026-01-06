@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="max-w-5xl mx-auto space-y-6">
-    @if(!$location)
+    @if(!$activeLocation)
         <x-card>
             <div class="text-center py-8">
                 <svg class="w-16 h-16 text-slate-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,70 +18,73 @@
                 </a>
             </div>
         </x-card>
-    @else
-        <!-- AI Recommendations -->
-        @if($aiRecommendations)
-        <div class="rounded-2xl border border-blue-500/30 bg-gradient-to-br from-blue-500/5 to-transparent backdrop-blur-sm p-6 relative overflow-hidden">
-            <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl"></div>
-            
-            <div class="relative">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-semibold text-white">AI Profile Optimization</h3>
-                            <p class="text-sm text-slate-400">Recommendations to improve your Google Business Profile</p>
-                        </div>
-                    </div>
-                    
-                    <form action="{{ route('business-profile.refresh-recommendations') }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="px-3 py-1.5 text-sm rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-blue-500/50 transition-all flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                            </svg>
-                            Refresh
-                        </button>
-                    </form>
-                </div>
-                
-                <div class="prose prose-invert prose-sm max-w-none prose-headings:text-white prose-headings:font-semibold prose-p:text-slate-300 prose-strong:text-blue-400 prose-ul:text-slate-300 prose-li:text-slate-300">
-                    {!! \Illuminate\Support\Str::markdown($aiRecommendations) !!}
-                </div>
+    @elseif(!$location)
+        <x-card>
+            <div class="text-center py-8">
+                <svg class="w-16 h-16 text-slate-600 mx-auto mb-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <h3 class="text-lg font-semibold text-white mb-2">Loading Profile Data...</h3>
+                <p class="text-slate-400 mb-4">Fetching your business information from Google</p>
             </div>
-        </div>
-        @endif
-
+        </x-card>
+    @else
         <!-- Edit Profile Form -->
         <x-card>
             <div class="flex items-center justify-between mb-6">
                 <div>
-                    <h3 class="text-lg font-semibold text-white">GBP Score Optimization</h3>
-                    <p class="text-sm text-slate-400 mt-1">Optimize your Google Business Profile for better visibility</p>
+                    <h3 class="text-lg font-semibold text-white">Business Profile Details</h3>
+                    <p class="text-sm text-slate-400 mt-1">View your Google Business Profile information</p>
+                </div>
+                
+                <!-- Refresh Button -->
+                <form action="{{ route('business-profile.refresh-data') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        Refresh from Google
+                    </button>
+                </form>
+            </div>
+            
+            @if(session('success'))
+                <div class="mb-4 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+                    <p class="text-sm text-green-200">{{ session('success') }}</p>
+                </div>
+            @endif
+            
+            @if(session('error'))
+                <div class="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                    <p class="text-sm text-red-200">{{ session('error') }}</p>
+                </div>
+            @endif
+
+            <!-- Info Message -->
+            <div class="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <p class="text-sm text-blue-200 font-medium">Direct Google Management Recommended</p>
+                        <p class="text-sm text-blue-300/80 mt-1">To make changes to your business profile, please visit <a href="https://business.google.com" target="_blank" class="underline hover:text-blue-200">Google Business Profile</a> directly. Some profile fields require verification through Google's interface.</p>
+                    </div>
                 </div>
             </div>
 
-            <form action="{{ route('business-profile.update') }}" method="POST" class="space-y-6">
-                @csrf
-                @method('PUT')
+            <div class="space-y-6">
 
                 <!-- Business Name -->
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">Business Name</label>
                     <input 
                         type="text" 
-                        name="title" 
-                        value="{{ old('title', $location['title'] ?? '') }}"
-                        class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
-                        placeholder="Your Business Name"
+                        value="{{ $location['title'] ?? '' }}"
+                        readonly
+                        class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-300 cursor-not-allowed"
                     >
-                    @error('title')
-                        <p class="text-red-400 text-sm mt-1">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Phone Number -->
@@ -89,14 +92,10 @@
                     <label class="block text-sm font-medium text-slate-300 mb-2">Phone Number</label>
                     <input 
                         type="text" 
-                        name="phone_number" 
-                        value="{{ old('phone_number', $location['phoneNumbers']['primaryPhone'] ?? '') }}"
-                        class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
-                        placeholder="+1 (555) 123-4567"
+                        value="{{ $location['phoneNumbers']['primaryPhone'] ?? '' }}"
+                        readonly
+                        class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-300 cursor-not-allowed"
                     >
-                    @error('phone_number')
-                        <p class="text-red-400 text-sm mt-1">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Website URL -->
@@ -104,35 +103,22 @@
                     <label class="block text-sm font-medium text-slate-300 mb-2">Website URL</label>
                     <input 
                         type="url" 
-                        name="website_uri" 
-                        value="{{ old('website_uri', $location['websiteUri'] ?? '') }}"
-                        class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
-                        placeholder="https://yourbusiness.com"
+                        value="{{ $location['websiteUri'] ?? '' }}"
+                        readonly
+                        class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-300 cursor-not-allowed"
                     >
-                    @error('website_uri')
-                        <p class="text-red-400 text-sm mt-1">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Business Description -->
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-2">
                         Business Description
-                        <span class="text-slate-500 font-normal">(Max 750 characters)</span>
                     </label>
                     <textarea 
-                        name="description" 
+                        readonly
                         rows="5"
-                        maxlength="750"
-                        class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition resize-none"
-                        placeholder="Tell customers what makes your business special..."
-                    >{{ old('description', $location['profile']['description'] ?? '') }}</textarea>
-                    @error('description')
-                        <p class="text-red-400 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                    <p class="text-xs text-slate-500 mt-1">
-                        <span id="char-count">{{ strlen($location['profile']['description'] ?? '') }}</span>/750 characters
-                    </p>
+                        class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-300 cursor-not-allowed resize-none"
+                    >{{ $location['profile']['description'] ?? '' }}</textarea>
                 </div>
 
                 <!-- Current Categories (Read-only) -->
@@ -149,17 +135,157 @@
                     <p class="text-xs text-slate-500 mt-2">Categories can be managed in Google Business Profile Manager</p>
                 </div>
                 @endif
+            </div>
+        </x-card>
 
-                <!-- Save Button -->
-                <div class="flex justify-end pt-4 border-t border-slate-700">
-                    <button type="submit" class="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 font-medium rounded-lg transition-colors flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        Save Changes
-                    </button>
+        <!-- Additional Profile Information -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Opening Hours -->
+            @if(isset($location['regularHours']['periods']) && !empty($location['regularHours']['periods']))
+            <x-card>
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Opening Hours
+                </h3>
+                <div class="space-y-2">
+                    @php
+                        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                        $periods = collect($location['regularHours']['periods']);
+                    @endphp
+                    @foreach($days as $index => $day)
+                        @php
+                            $dayPeriods = $periods->where('openDay', strtoupper(substr($day, 0, 3)))->first();
+                        @endphp
+                        <div class="flex justify-between items-center py-2 border-b border-slate-800 last:border-0">
+                            <span class="text-slate-300 font-medium">{{ $day }}</span>
+                            @if($dayPeriods)
+                                <span class="text-slate-400">{{ $dayPeriods['openTime'] ?? '00:00' }} - {{ $dayPeriods['closeTime'] ?? '24:00' }}</span>
+                            @else
+                                <span class="text-slate-500">Closed</span>
+                            @endif
+                        </div>
+                    @endforeach
                 </div>
-            </form>
+            </x-card>
+            @endif
+
+            <!-- Attributes -->
+            @if(isset($location['attributes']) && !empty($location['attributes']))
+            <x-card>
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Attributes
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                    @foreach(array_slice($location['attributes'], 0, 15) as $attribute)
+                        <span class="px-3 py-1.5 bg-slate-700/50 text-slate-300 rounded-lg text-xs">
+                            {{ $attribute['displayName'] ?? $attribute['name'] ?? 'Attribute' }}
+                        </span>
+                    @endforeach
+                </div>
+            </x-card>
+            @endif
+        </div>
+
+        <!-- Services -->
+        @if(isset($location['serviceItems']) && !empty($location['serviceItems']))
+        <x-card>
+            <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                Services Offered
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @foreach($location['serviceItems'] as $service)
+                    <div class="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                        <h4 class="font-medium text-white mb-1">{{ $service['structuredServiceItem']['displayName'] ?? $service['displayName'] ?? 'Service' }}</h4>
+                        @if(isset($service['structuredServiceItem']['description']))
+                            <p class="text-sm text-slate-400">{{ $service['structuredServiceItem']['description'] }}</p>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </x-card>
+        @endif
+
+        <!-- Additional Information -->
+        @if(isset($location['moreHours']) || isset($location['serviceArea']) || isset($location['labels']))
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- More Hours -->
+            @if(isset($location['moreHours']) && !empty($location['moreHours']))
+            <x-card>
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Special Hours
+                </h3>
+                <div class="space-y-2">
+                    @foreach($location['moreHours'] as $moreHour)
+                        <div class="text-sm">
+                            <p class="font-medium text-white">{{ $moreHour['hoursTypeId'] ?? 'Special' }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            </x-card>
+            @endif
+
+            <!-- Service Area -->
+            @if(isset($location['serviceArea']))
+            <x-card>
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                    </svg>
+                    Service Area
+                </h3>
+                <p class="text-sm text-slate-300">Business serves customers in specific areas</p>
+            </x-card>
+            @endif
+
+            <!-- Labels -->
+            @if(isset($location['labels']) && !empty($location['labels']))
+            <x-card>
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                    Labels
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                    @foreach($location['labels'] as $label)
+                        <span class="px-2 py-1 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded text-xs">
+                            {{ $label }}
+                        </span>
+                    @endforeach
+                </div>
+            </x-card>
+            @endif
+        </div>
+        @endif
+
+        <!-- Debug: Show All Available Data -->
+        <x-card>
+            <div x-data="{ showDebug: false }">
+                <button @click="showDebug = !showDebug" class="flex items-center gap-2 text-slate-400 hover:text-white transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!showDebug">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="showDebug">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    <span x-text="showDebug ? 'Hide Raw Data' : 'Show All Available Data'"></span>
+                </button>
+                
+                <div x-show="showDebug" class="mt-4 p-4 bg-slate-900 rounded-lg overflow-auto max-h-96">
+                    <pre class="text-xs text-slate-300">{{ json_encode($location, JSON_PRETTY_PRINT) }}</pre>
+                </div>
+            </div>
         </x-card>
     @endif
 </div>

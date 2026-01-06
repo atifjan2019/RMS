@@ -27,32 +27,73 @@ class BusinessProfileController extends Controller
         if (!$activeLocation) {
             return view('business-profile.index', [
                 'location' => null,
-                'aiRecommendations' => null,
+                'activeLocation' => null,
             ]);
         }
 
-        // Get detailed location info from Google
-        $locationData = Cache::remember("location_details_{$tenant->id}_{$activeLocation->location_name}", 300, function () use ($tenant, $activeLocation) {
-            try {
-                return $this->gbpClient->getLocation($tenant, $activeLocation->location_name);
-            } catch (\Exception $e) {
-                return null;
-            }
-        });
-
-        // Generate AI recommendations for profile improvement
-        $aiRecommendations = null;
-        if ($locationData) {
-            $aiRecommendations = Cache::remember("profile_recommendations_{$tenant->id}", 3600, function () use ($locationData, $tenant) {
-                return $this->openAI->generateProfileRecommendations($locationData, $tenant);
-            });
-        }
+        // Use database data by default - no API calls
+        $locationData = [
+            'name' => $activeLocation->location_name,
+            'title' => $activeLocation->title,
+            'phoneNumbers' => [
+                'primaryPhone' => $activeLocation->phone,
+            ],
+            'websiteUri' => $activeLocation->website,
+            'storefrontAddress' => [
+                'addressLines' => [$activeLocation->address_line],
+                'locality' => $activeLocation->city,
+                'administrativeArea' => $activeLocation->state,
+                'postalCode' => $activeLocation->postal_code,
+                'regionCode' => $activeLocation->country,
+            ],
+            'categories' => [
+                'primaryCategory' => [
+                    'displayName' => $activeLocation->primary_category,
+                ],
+            ],
+            'metadata' => $activeLocation->metadata,
+        ];
 
         return view('business-profile.index', [
             'location' => $locationData,
-            'aiRecommendations' => $aiRecommendations,
             'tenant' => $tenant,
+            'activeLocation' => $activeLocation,
         ]);
+    }
+
+    /**
+     * Manually refresh location data from Google API.
+     */
+    public function refreshData(): RedirectResponse
+    {
+        $tenant = auth()->user()->tenant;
+        $activeLocation = $tenant->activeLocation();
+
+        if (!$activeLocation) {
+            return back()->with('error', 'No active location selected.');
+        }
+
+        try {
+            // Fetch fresh data from Google API
+            $locationData = $this->gbpClient->getLocationComprehensive($tenant, $activeLocation->location_name);
+
+            if ($locationData) {
+                // Update database with fresh data
+                $activeLocation->update([
+                    'title' => $locationData['title'] ?? $activeLocation->title,
+                    'phone' => $locationData['phoneNumbers']['primaryPhone'] ?? $activeLocation->phone,
+                    'website' => $locationData['websiteUri'] ?? $activeLocation->website,
+                    'primary_category' => $locationData['categories']['primaryCategory']['displayName'] ?? $activeLocation->primary_category,
+                    'metadata' => array_merge($activeLocation->metadata ?? [], $locationData),
+                ]);
+
+                return back()->with('success', 'Business profile data refreshed successfully!');
+            }
+
+            return back()->with('error', 'Failed to fetch data from Google.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error refreshing data: ' . $e->getMessage());
+        }
     }
 
     /**

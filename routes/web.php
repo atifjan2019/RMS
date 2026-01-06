@@ -71,10 +71,58 @@ Route::middleware(['auth', 'tenant', 'subscribed'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/dashboard/refresh-summary', [DashboardController::class, 'refreshSummary'])->name('dashboard.refresh-summary');
+    
+    // Debug route
+    Route::get('/debug-google-api', function() {
+        $tenant = auth()->user()->tenant;
+        $activeLocation = $tenant->activeLocation();
+        
+        if (!$activeLocation) {
+            return response()->json(['error' => 'No active location']);
+        }
+        
+        try {
+            $tokenService = app(\App\Services\GoogleTokenService::class);
+            $token = $tokenService->getAccessToken($tenant);
+            
+            // Test API call with different readMasks
+            $tests = [
+                'minimal' => 'name,title',
+                'basic' => 'name,title,phoneNumbers,websiteUri',
+                'full' => 'name,title,phoneNumbers,categories,storefrontAddress,websiteUri,regularHours,profile',
+            ];
+            
+            $results = [];
+            foreach ($tests as $testName => $readMask) {
+                $response = \Illuminate\Support\Facades\Http::withToken($token)
+                    ->get("https://mybusinessbusinessinformation.googleapis.com/v1/{$activeLocation->location_name}", [
+                        'readMask' => $readMask
+                    ]);
+                
+                $results[$testName] = [
+                    'status' => $response->status(),
+                    'readMask' => $readMask,
+                    'success' => $response->successful(),
+                    'body' => $response->json(),
+                ];
+            }
+            
+            return response()->json([
+                'location_name' => $activeLocation->location_name,
+                'token_exists' => !empty($token),
+                'results' => $results,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+            ]);
+        }
+    });
 
     // Business Profile
     Route::prefix('business-profile')->name('business-profile.')->group(function () {
         Route::get('/', [BusinessProfileController::class, 'index'])->name('index');
+        Route::post('/refresh-data', [BusinessProfileController::class, 'refreshData'])->name('refresh-data');
         Route::put('/update', [BusinessProfileController::class, 'update'])->name('update');
         Route::post('/refresh-recommendations', [BusinessProfileController::class, 'refreshRecommendations'])->name('refresh-recommendations');
     });
